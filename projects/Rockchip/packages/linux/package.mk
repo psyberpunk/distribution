@@ -9,7 +9,7 @@ PKG_NAME="linux"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/JustEnoughLinuxOS"
 PKG_DEPENDS_HOST="ccache:host rsync:host openssl:host"
-PKG_DEPENDS_TARGET="toolchain linux:host cpio:host kmod:host xz:host wireless-regdb keyutils util-linux binutils ncurses openssl:host glibc ${KERNEL_EXTRA_DEPENDS_TARGET}"
+PKG_DEPENDS_TARGET="toolchain linux:host cpio:host kmod:host xz:host lz4:host wireless-regdb keyutils util-linux binutils ncurses openssl:host initramfs ${KERNEL_EXTRA_DEPENDS_TARGET}"
 PKG_DEPENDS_INIT="toolchain"
 PKG_NEED_UNPACK="${LINUX_DEPENDS} $(get_pkg_directory busybox)"
 PKG_LONGDESC="This package builds the kernel for Rockchip devices"
@@ -19,10 +19,16 @@ PKG_PATCH_DIRS+="${DEVICE}"
 
 case ${DEVICE} in
   RK3588)
-    PKG_VERSION="161606b049488da100e5d7ec95c8997d3b59b20d"
-    PKG_URL="https://github.com/orangepi-xunlong/linux-orangepi.git"
+    PKG_VERSION="9469ea8bd5ed"
+    PKG_URL="${PKG_SITE}/rk358x-kernel.git"
     GET_HANDLER_SUPPORT="git"
-    PKG_GIT_CLONE_BRANCH="orange-pi-5.10-rk3588"
+    PKG_GIT_CLONE_BRANCH="main"
+  ;;
+  RK3566)
+    PKG_URL="${PKG_SITE}/rk356x-kernel.git"
+    PKG_VERSION="5aef2e6"
+    GET_HANDLER_SUPPORT="git"
+    PKG_GIT_CLONE_BRANCH="main"
   ;;
 esac
 
@@ -223,9 +229,6 @@ make_target() {
 
     KERNEL_TARGET="${KERNEL_UIMAGE_TARGET}"
   fi
-  if [ "${PKG_SOC}" = "rk35*" ]; then
-      kernel_make ${KERNEL_TARGET} ${KERNEL_MAKE_EXTRACMD} ARCH=arm64 ${DEVICE_DTB[0]}.img
-  fi
 }
 
 makeinstall_target() {
@@ -237,8 +240,9 @@ makeinstall_target() {
         cp -v ${dtb} ${INSTALL}/usr/share/bootloader
       fi
     done
-    if [ "${PKG_SOC}" = "rk35*" ]; then
+    if [ "${TRUST_LABEL}" = "resource" ]; then
       ARCH=arm64 scripts/mkimg --dtb ${DEVICE_DTB[0]}.dtb
+      ARCH=arm64 scripts/mkmultidtb.py ${PKG_SOC}
       cp -v resource.img ${INSTALL}/usr/share/bootloader
       ARCH=${TARGET_ARCH}
     fi

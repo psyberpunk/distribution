@@ -4,12 +4,11 @@
 # Copyright (C) 2020-present Team CoreELEC (https://coreelec.org)
 
 PKG_NAME="gobject-introspection"
-PKG_VERSION="1.74.0"
-PKG_SHA256="79ed5d764d288f046b027ff064be174d7904904565de150a94841740a2a0455d"
+PKG_VERSION="1.75.6"
 PKG_ARCH="any"
 PKG_LICENSE="LGPL"
 PKG_SITE="http://www.gtk.org/"
-PKG_URL="https://github.com/GNOME/$PKG_NAME/archive/$PKG_VERSION.tar.gz"
+PKG_URL="https://github.com/GNOME/${PKG_NAME}/archive/${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain libffi glib Python3 qemu:host gobject-introspection:host"
 PKG_DEPENDS_HOST="libffi:host glib:host"
 PKG_SECTION="devel"
@@ -19,17 +18,26 @@ PKG_TOOLCHAIN="meson"
 
 pre_configure_host() {
   PKG_MESON_OPTS_HOST=" \
-    -Ddoctool=disabled \
-    -Dbuild_introspection_data=false"
+    -Ddoctool=disabled"
 
   # prevent g-ir-scanner from writing cache data to $HOME
   export GI_SCANNER_DISABLE_CACHE="1"
+
+  CC="${HOST_CC}"
+  CXX="${HOST_CXX}"
+  AR="${HOST_AR}"
+  CPP="${HOST_PREFIX}cpp"
+  CPPFLAGS="${HOST_CPPFLAGS}"
+  CFLAGS="${HOST_CFLAGS} -fPIC"
+  LDFLAGS="${HOST_LDFLAGS}"
 }
 
 pre_configure_target() {
   GLIBC_DYNAMIC_LINKER="$(ls ${SYSROOT_PREFIX}/usr/lib/ld-linux-*.so.*)"
   QEMU_BINARY="${TOOLCHAIN}/bin/qemu-${TARGET_ARCH}"
   PKG_CONFIG_PATH="${SYSROOT_PREFIX}/usr/lib/pkgconfig"
+
+  TARGET_LDFLAGS="${TARGET_LDFLAGS} -Wl,--dynamic-linker=${GLIBC_DYNAMIC_LINKER}"
 
   # for gi this variables must be defined for target and not for host
   # because they are used in
@@ -40,7 +48,7 @@ pre_configure_target() {
   CPP="${TARGET_PREFIX}cpp"
   CPPFLAGS="${TARGET_CPPFLAGS}"
   CFLAGS="${TARGET_CFLAGS} -fPIC"
-  LDFLAGS="${TARGET_LDFLAGS} -Wl,--dynamic-linker=${GLIBC_DYNAMIC_LINKER}"
+  LDFLAGS="${TARGET_LDFLAGS}"
 
   PKG_MESON_OPTS_TARGET=" \
     -Ddoctool=disabled \

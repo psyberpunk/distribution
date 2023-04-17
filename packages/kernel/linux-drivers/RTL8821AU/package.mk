@@ -4,7 +4,7 @@
 # Copyright (C) 2021-present Fewtarius
 
 PKG_NAME="RTL8821AU"
-PKG_VERSION="663dc8fe1fbc100be9ed532f003c6eb90dab3d33"
+PKG_VERSION="a133274b0532c17318e8790b771566f4a6b12b7c"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/morrownr/8821au-20210708"
 PKG_URL="${PKG_SITE}.git"
@@ -12,6 +12,7 @@ PKG_DEPENDS_TARGET="toolchain linux"
 PKG_NEED_UNPACK="${LINUX_DEPENDS}"
 PKG_LONGDESC="Realtek 8821AU driver for 4.4-5.x"
 PKG_IS_KERNEL_PKG="yes"
+PKG_TOOLCHAIN="make"
 
 pre_make_target() {
   unset LDFLAGS

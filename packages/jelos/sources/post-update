@@ -85,7 +85,7 @@ then
 fi
 
 # Disable integer scaling by default on Handheld 
-if [[ "${HW_DEVICE}" =~ handheld ]]
+if [[ "${HW_DEVICE}" =~ AMD64 ]]
 then
   echo "No integer scaling (Handheld only)..." >>${LOG}
   sed -i "s#.integerscale=1#.integerscale=0#g" /storage/.config/system/configs/system.cfg
@@ -180,3 +180,13 @@ fi
 
 ### Force everyone to the stable repo
 set_setting updates.branch stable
+
+### Configure box86/64 defaults
+for BOX in box86 box64
+do
+  if [ ! -e "/storage/.config/${BOX}.${BOX}rc" ]
+  then
+    cp -f /usr/config/${BOX}.${BOX}rc /storage/.config/
+  fi
+done
+

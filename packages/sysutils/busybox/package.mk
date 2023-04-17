@@ -50,7 +50,7 @@ pre_build_host() {
 
 pre_build_init() {
   PKG_MAKE_OPTS_INIT="ARCH=${TARGET_ARCH} \
-                      HOSTCC=$HOST_CC \
+                      HOSTCC=${HOST_CC} \
                       CROSS_COMPILE=${TARGET_PREFIX} \
                       KBUILD_VERBOSE=1 \
                       install"
@@ -191,6 +191,8 @@ post_install() {
   enable_service shell.service
   enable_service show-version.service
   enable_service var.mount
+  enable_service proc-sys-fs-binfmt_misc.mount
+
   listcontains "${FIRMWARE}" "rpi-eeprom" && enable_service rpi-flash-firmware.service
 
   # cron support

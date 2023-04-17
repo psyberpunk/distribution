@@ -76,7 +76,7 @@ As the distribution is being built, package source are fetched and hosted in thi
 The tools directory contains utility scripts that can be used during the development process, including a simple tool to burn an image to a usb drive or sdcard.
 
 ## Building JELOS
-Building JELOS requires an Ubuntu 22.04 host with approximately 200GB of free space for a single device, or 800GB of free space for a full world build.  Other Linux distributions may be used when building using Docker, however this is untested and unsupported.  We recommend building with no more than 8 cores.
+Building JELOS requires an Ubuntu 22.04 host with 200GB of free space for a single device, or 1TB of free space for a full world build.  Other Linux distributions may be used when building using Docker, however this is untested and unsupported.
 
 ### Cloning the JELOS Sources
 To build JELOS, start by cloning the project git repository.
@@ -104,10 +104,13 @@ git checkout dev
 ### Building with Docker
 Building JELOS is easy, the fastest and most recommended method is to instruct the build to use Docker, this is only known to work on a Linux system.  To build JELOS with Docker use the table below.
 
-| Device | Dependency | Docker Command |
+| Devices | Dependency | Docker Command |
 | ---- | ---- | ---- |
-|handheld||```PYTHON_EGG_CACHE="`pwd`/.egg_cache" make docker-handheld```|
-|ALL DEVICES||```PYTHON_EGG_CACHE="`pwd`/.egg_cache" make docker-world```|
+|AMD64||```make docker-AMD64```|
+|RK3588||```make docker-RK3588```|
+|RK3566||```make docker-RK3566```|
+|S922X||```make docker-S922X```|
+|ALL DEVICES||```make docker-world```|
 
 > Devices that list a dependency require the dependency to be built first as that build will be used as the root of the device you are building.  This will be done automatically by the build tooling when you start a build for your device.
 
@@ -128,14 +131,14 @@ sudo apt install gcc make git unzip wget \
 Next, build the version of JELOS for your device.  See the table above for dependencies. 
 
 ```
-make handheld
+make AMD64
 ```
 
 ### Building a single package
 It is also possible to build individual packages.
 ```
-DEVICE=handheld ARCH=x86_64 ./scripts/clean busybox
-DEVICE=handheld ARCH=x86_64 ./scripts/build busybox
+DEVICE=AMD64 ARCH=x86_64 ./scripts/clean busybox
+DEVICE=AMD64 ARCH=x86_64 ./scripts/build busybox
 ```
 
 > Note: Emulation Station package build requires additional steps because its source code located in a separate repository, see instructions inside, [link](https://github.com/JustEnoughLinuxOS/distribution/blob/main/packages/ui/emulationstation/package.mk).
@@ -176,9 +179,9 @@ mv wireguard-linux-compat-v1.0.20211208 wireguard-linux-compat
 cp -rf wireguard-linux-compat wireguard-linux-compat.orig
 
 # Make your changes to wireguard-linux-compat
-mkdir -p ../../packages/network/wireguard-linux-compat/patches/handheld
+mkdir -p ../../packages/network/wireguard-linux-compat/patches/AMD64
 # run from the sources dir
-diff -rupN wireguard-linux-compat wireguard-linux-compat.orig >../../packages/network/wireguard-linux-compat/patches/handheld/mychanges.patch
+diff -rupN wireguard-linux-compat wireguard-linux-compat.orig >../../packages/network/wireguard-linux-compat/patches/AMD64/mychanges.patch
 ```
 
 ### Creating a patch for a package using git
@@ -200,9 +203,9 @@ If you already have a build for your device made using the above process, it's s
 ```
 # Update the package version for a new package, or apply your patch as above.
 vim/emacs/vscode/notepad.exe
-# Export the variables needed to complete your build, we'll assume you are building handheld, update the device to match your configuration.
+# Export the variables needed to complete your build, we'll assume you are building AMD64, update the device to match your configuration.
 export OS_VERSION=$(date +%Y%m%d) BUILD_DATE=$(date)
-export PROJECT=PC ARCH=x86_64 DEVICE=handheld
+export PROJECT=PC ARCH=x86_64 DEVICE=AMD64
 # Clean the package you are building.
 ./scripts/clean emulationstation
 # Build the package.

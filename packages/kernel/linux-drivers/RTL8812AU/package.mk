@@ -4,7 +4,7 @@
 # Copyright (C) 2021-present Fewtarius
 
 PKG_NAME="RTL8812AU"
-PKG_VERSION="65949c530359ece8f28c84516f4d17fe7ab7d897"
+PKG_VERSION="a185a595248926eda0796104fa8417c6248bfd60"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/morrownr/8812au-20210629"
 PKG_URL="${PKG_SITE}.git"
@@ -12,6 +12,7 @@ PKG_DEPENDS_TARGET="toolchain linux"
 PKG_NEED_UNPACK="${LINUX_DEPENDS}"
 PKG_LONGDESC="Realtek 8812AU driver for 4.4-5.x"
 PKG_IS_KERNEL_PKG="yes"
+PKG_TOOLCHAIN="make"
 
 pre_make_target() {
   unset LDFLAGS

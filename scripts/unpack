@@ -39,7 +39,12 @@ for i in ${BUILD}/${PKG_NAME}-*; do
       [ -z "${PKG_DEEPHASH}" ] && PKG_DEEPHASH=$(calculate_stamp)
       if [ ! "${PKG_DEEPHASH}" = "${STAMP_PKG_DEEPHASH}" ] ; then
         ${SCRIPTS}/clean "${PKG_NAME}"
-        [ "${PKG_NAME}" = "linux" -a "${KERNEL_EXTRA_DEPENDS_TARGET}" = "device-trees-amlogic" ] && ${SCRIPTS}/clean "device-trees-amlogic"
+        if [ "${PKG_NAME}" = "linux" ]; then
+          for CLEAN_DEP in ${KERNEL_EXTRA_DEPENDS_TARGET} ${ADDITIONAL_DRIVERS}
+          do
+            ${SCRIPTS}/clean "${CLEAN_DEP}"
+          done
+        fi
       fi
     fi
   fi
@@ -184,7 +189,7 @@ if [ -d "${SOURCES}/${PKG_NAME}" -o -d "${PKG_DIR}/sources" ] || pkg_call_exists
         if grep -qE '^GIT binary patch$|^rename from|^rename to' ${i}; then
           cat ${i} | git apply --directory=$(echo "${PKG_BUILD}" | cut -f1 -d\ ) -p1 --verbose --whitespace=nowarn --unsafe-paths >&${VERBOSE_OUT}
         else
-          cat ${i} | patch -d $(echo "${PKG_BUILD}" | cut -f1 -d\ ) -p1 >&${VERBOSE_OUT}
+          cat ${i} | sed -s -e "s#@TARGET_CPU@#${TARGET_CPU}#g" -e "s#@DEVICE@#${DEVICE}#g" | patch -d $(echo "${PKG_BUILD}" | cut -f1 -d\ ) -p1 >&${VERBOSE_OUT}
         fi
       fi
     done

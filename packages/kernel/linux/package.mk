@@ -4,11 +4,11 @@
 
 PKG_NAME="linux"
 PKG_LICENSE="GPL"
-PKG_VERSION="6.1.11"
+PKG_VERSION="6.1.24"
 PKG_URL="https://www.kernel.org/pub/linux/kernel/v6.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
 PKG_SITE="http://www.kernel.org"
 PKG_DEPENDS_HOST="ccache:host rsync:host openssl:host"
-PKG_DEPENDS_TARGET="toolchain linux:host kmod:host cpio:host xz:host keyutils ncurses openssl:host wireless-regdb ${KERNEL_EXTRA_DEPENDS_TARGET}"
+PKG_DEPENDS_TARGET="toolchain linux:host kmod:host cpio:host xz:host keyutils ncurses openssl:host wireless-regdb initramfs ${KERNEL_EXTRA_DEPENDS_TARGET}"
 PKG_NEED_UNPACK="${LINUX_DEPENDS} $(get_pkg_directory initramfs) $(get_pkg_variable initramfs PKG_NEED_UNPACK)"
 PKG_LONGDESC="This package contains a precompiled kernel image and the modules."
 PKG_IS_KERNEL_PKG="yes"
@@ -29,7 +29,7 @@ if [ "${PKG_BUILD_PERF}" != "no" ] && grep -q ^CONFIG_PERF_EVENTS= ${PKG_KERNEL_
   PKG_DEPENDS_TARGET+=" binutils elfutils libunwind zlib openssl"
 fi
 
-if [ "${TARGET_ARCH}" = "x86_64" ]; then
+if [[ "${TARGET_ARCH}" =~ i*86|x86_64 ]]; then
   PKG_DEPENDS_TARGET+=" elfutils:host pciutils"
   PKG_DEPENDS_UNPACK+=" intel-ucode kernel-firmware"
 elif [ "${TARGET_ARCH}" = "arm" -a "${DEVICE}" = "iMX6" ]; then
@@ -152,7 +152,7 @@ pre_make_target() {
     ${PKG_BUILD}/scripts/config --disable CONFIG_WIREGUARD
   fi
 
-  if [ "${TARGET_ARCH}" = "x86_64" ]; then
+  if [[ "${TARGET_ARCH}" =~ i*86|x86_64 ]]; then
     # copy some extra firmware to linux tree
     mkdir -p ${PKG_BUILD}/external-firmware
       cp -a $(get_build_dir kernel-firmware)/.copied-firmware/{amdgpu,amd-ucode,i915,radeon,e100,rtl_nic} ${PKG_BUILD}/external-firmware
@@ -214,7 +214,7 @@ make_target() {
 
       # arch specific perf build args
       case "${TARGET_ARCH}" in
-        x86_64)
+        x86_64|i*86)
           PERF_BUILD_ARGS="ARCH=x86"
           ;;
         aarch64)

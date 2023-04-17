@@ -14,52 +14,48 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 PKG_TOOLCHAIN="make"
 
-if [ ! "${OPENGL}" = "no" ]; then
-  PKG_DEPENDS_TARGET+=" ${OPENGL} glu libglvnd"
-fi
-
-if [ "${OPENGLES_SUPPORT}" = yes ]; then
-  PKG_DEPENDS_TARGET+=" ${OPENGLES}"
-fi
-
-PKG_BASEOS="plymouth-lite grep wget libjpeg-turbo util-linux xmlstarlet bluetool gnupg gzip patchelf  \
-            imagemagick terminus-font vim bash pyudev dialog six git dbus-python coreutils miniupnpc  \
-            nss-mdns avahi alsa-ucm-conf MC fbgrab modules system-utils autostart powerstate powertop \
-            ectool"
+PKG_BASEOS="plymouth-lite grep wget util-linux xmlstarlet gnupg gzip patchelf imagemagick \
+            terminus-font vim bash pyudev dialog six git dbus-python coreutils \
+            alsa-ucm-conf fbgrab modules system-utils autostart quirks powerstate powertop ectool"
 
 PKG_UI="emulationstation es-themes"
 
+PKG_UI_TOOLS="fileman"
+
 PKG_SOFTWARE=""
 
-PKG_COMPAT=""
-
-PKG_MULTIMEDIA="ffmpeg vlc"
-
-### Splitting out MPV
-case "${DEVICE}" in
-  handheld)
-    PKG_MULTIMEDIA="mpv"
+case "${ENABLE_32BIT}" in
+  true)
+    PKG_COMPAT="lib32"
   ;;
 esac
 
-PKG_TOOLS="i2c-tools synctools jslisten evtest tailscale pygobject mesa-demos"
+PKG_MULTIMEDIA="ffmpeg vlc mpv"
+
+PKG_NETWORK="network synctools pygobject"
+
+PKG_TOOLS="i2c-tools evtest jslisten"
 
 ### Project specific variables
 case "${PROJECT}" in
-  Rockchip)
-    PKG_EMUS+=" retropie-shaders"
-    PKG_COMPAT+=" lib32"
-  ;;
   PC)
     PKG_BASEOS+=" installer"
   ;;
+  *)
+    PKG_EMUS+=" retropie-shaders"
+  ;;
 esac
+
+if [ ! "${OPENGL}" = "no" ]
+then
+  PKG_DEPENDS_TARGET+=" mesa-demos glmark2"
+fi
 
 if [ ! -z "${BASE_ONLY}" ]
 then
-  PKG_DEPENDS_TARGET+=" ${PKG_BASEOS} ${PKG_TOOLS} ${PKG_UI}"
+  PKG_DEPENDS_TARGET+=" ${PKG_BASEOS} ${PKG_NETWORK} ${PKG_TOOLS} ${PKG_UI}"
 else
-  PKG_DEPENDS_TARGET+=" ${PKG_BASEOS} ${PKG_TOOLS} ${PKG_UI} ${PKG_COMPAT} ${PKG_MULTIMEDIA} ${PKG_SOFTWARE}"
+  PKG_DEPENDS_TARGET+=" ${PKG_BASEOS} ${PKG_NETWORK} ${PKG_TOOLS} ${PKG_UI} ${PKG_UI_TOOLS} ${PKG_COMPAT} ${PKG_MULTIMEDIA} ${PKG_SOFTWARE}"
 fi
 
 make_target() {
@@ -75,18 +71,19 @@ makeinstall_target() {
 
   mkdir -p ${INSTALL}/usr/bin/
 
-  ## Compatibility links for ports
+  ### Compatibility links for ports
   ln -s /storage/roms ${INSTALL}/roms
-  ln -sf /storage/roms/opt ${INSTALL}/opt
 
   ### Add some quality of life customizations for hardworking devs.
-  if [ -n "${LOCAL_SSH_KEYS_FILE}" ]; then
+  if [ -n "${LOCAL_SSH_KEYS_FILE}" ]
+  then
     mkdir -p ${INSTALL}/usr/config/ssh
     cp ${LOCAL_SSH_KEYS_FILE} ${INSTALL}/usr/config/ssh/authorized_keys
   fi
 
-  if [ -n "${LOCAL_WIFI_SSID}" ]; then
-    sed -i "s#wifi.enabled=0#wifi.enabled=1#g" ${INSTALL}/usr/config/system/configs/system.cfg
+  if [ -n "${LOCAL_WIFI_SSID}" ]
+  then
+    sed -i "s#network.enabled=0#network.enabled=1#g" ${INSTALL}/usr/config/system/configs/system.cfg
     cat <<EOF >> ${INSTALL}/usr/config/system/configs/system.cfg
 wifi.ssid=${LOCAL_WIFI_SSID}
 wifi.key=${LOCAL_WIFI_KEY}
@@ -130,6 +127,7 @@ EOF
   if [[ ! "${BUILD_BRANCH}" =~ main ]]
   then
     sed -i "s#ssh.enabled=0#ssh.enabled=1#g" ${INSTALL}/usr/config/system/configs/system.cfg
+    sed -i "s#network.enabled=0#network.enabled=1#g" ${INSTALL}/usr/config/system/configs/system.cfg
   fi
 
 }

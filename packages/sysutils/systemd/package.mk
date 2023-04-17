@@ -7,7 +7,7 @@ PKG_VERSION="252.5"
 PKG_LICENSE="LGPL2.1+"
 PKG_SITE="http://www.freedesktop.org/wiki/Software/systemd"
 PKG_URL="https://github.com/systemd/systemd-stable/archive/v${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="toolchain libcap kmod util-linux libidn2 wait-time-sync Python3:host jinja2:host"
+PKG_DEPENDS_TARGET="toolchain libcap kmod util-linux libidn2 wait-time-sync Python3:host jinja2:host pcre2"
 PKG_LONGDESC="A system and session manager for Linux, compatible with SysV and LSB init scripts."
 
 PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
@@ -45,7 +45,7 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Dxz=false \
                        -Dlz4=false \
                        -Dxkbcommon=false \
-                       -Dpcre2=false \
+                       -Dpcre2=true \
                        -Dglib=false \
                        -Ddbus=false \
                        -Ddefault-dnssec=no \
@@ -54,7 +54,7 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Dutmp=true \
                        -Dhibernate=false \
                        -Denvironment-d=false \
-                       -Dbinfmt=false \
+                       -Dbinfmt=true \
                        -Drepart=false \
                        -Dcoredump=false \
                        -Dresolve=false \
@@ -105,6 +105,14 @@ then
 fi
 
 pre_configure_target() {
+  export TARGET_CFLAGS=$(echo ${TARGET_CFLAGS} | sed -e "s|-ffast-math||g")
+  export TARGET_CFLAGS=$(echo ${TARGET_CFLAGS} | sed -e "s|-Ofast|-O3|g")
+  export TARGET_CFLAGS=$(echo ${TARGET_CFLAGS} | sed -e "s|-O.|-O3|g")
+
+  export TARGET_LDFLAGS=$(echo ${TARGET_LDFLAGS} | sed -e "s|-ffast-math||g")
+  export TARGET_LDFLAGS=$(echo ${TARGET_LDFLAGS} | sed -e "s|-Ofast|-O3|g")
+  export TARGET_LDFLAGS=$(echo ${TARGET_LDFLAGS} | sed -e "s|-O.|-O3|g")
+
   export TARGET_CFLAGS="${TARGET_CFLAGS} -fno-schedule-insns -fno-schedule-insns2 -Wno-format-truncation"
   export LC_ALL=en_US.UTF-8
 }
@@ -193,8 +201,8 @@ post_makeinstall_target() {
   sed -e "s,^.*SystemMaxUse=.*$,SystemMaxUse=10M,g" -i ${INSTALL}/etc/systemd/journald.conf
 
   # tune logind.conf
-  sed -e "s,^.*HandleLidSwitch=.*$,HandleLidSwitch=suspend,g" -i $INSTALL/etc/systemd/logind.conf
-  sed -e "s,^.*HandlePowerKey=.*$,HandlePowerKey=suspend,g" -i $INSTALL/etc/systemd/logind.conf
+  sed -e "s,^.*HandleLidSwitch=.*$,HandleLidSwitch=suspend,g" -i ${INSTALL}/etc/systemd/logind.conf
+  sed -e "s,^.*HandlePowerKey=.*$,HandlePowerKey=suspend,g" -i ${INSTALL}/etc/systemd/logind.conf
 
   # replace systemd-machine-id-setup with ours
   safe_remove ${INSTALL}/usr/lib/systemd/system/systemd-machine-id-commit.service

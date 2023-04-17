@@ -23,19 +23,26 @@ distclean:
 src-pkg:
 	tar cvJf sources.tar.xz sources .stamps
 
-world: x86_64
+world: AMD64 RK3588 RK3566 S922X
 
-x86_64: handheld RK3588
-
-handheld:
-	PROJECT=PC DEVICE=handheld ARCH=x86_64 ./scripts/build_distro
+AMD64:
+	PROJECT=PC DEVICE=AMD64 ARCH=i686 ./scripts/build_distro
+	PROJECT=PC DEVICE=AMD64 ARCH=x86_64 ./scripts/build_distro
 
 RK3588:
 	PROJECT=Rockchip DEVICE=RK3588 ARCH=arm ./scripts/build_distro
 	PROJECT=Rockchip DEVICE=RK3588 ARCH=aarch64 ./scripts/build_distro
 
+RK3566:
+	PROJECT=Rockchip DEVICE=RK3566 ARCH=arm ./scripts/build_distro
+	PROJECT=Rockchip DEVICE=RK3566 ARCH=aarch64 ./scripts/build_distro
+
+S922X:
+	PROJECT=Amlogic DEVICE=S922X ARCH=arm ./scripts/build_distro
+	PROJECT=Amlogic DEVICE=S922X ARCH=aarch64 ./scripts/build_distro
+
 update:
-	PROJECT=PC DEVICE=handheld ARCH=x86_64 ./scripts/update_packages
+	PROJECT=PC DEVICE=AMD64 ARCH=x86_64 ./scripts/update_packages
 
 package:
 	./scripts/build ${PACKAGE}
@@ -45,7 +52,7 @@ package-clean:
 
 ## Docker builds - overview
 # docker-* commands just wire up docker to call the normal make command via docker
-# For example: make docker-handheld will use docker to call: make handheld
+# For example: make docker-AMD64 will use docker to call: make AMD64
 # All variables are scoped to docker-* commands to prevent weird collisions/behavior with non-docker commands
 
 docker-%: DOCKER_IMAGE := "justenoughlinuxos/jelos-build:latest"

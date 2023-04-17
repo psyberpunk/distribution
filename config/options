@@ -30,8 +30,17 @@ PROJECT="${PROJECT:-PC}"
 ARCH="${ARCH:-x86_64}"
 TARGET_ARCH="${ARCH}"
 
+# determine if we are building 32bit support
+ENABLE_32BIT="${ENABLE_32BIT-true}"
+
 # determines the default device, if not forced by user
-DEVICE="${DEVICE:-handheld}"
+DEVICE="${DEVICE:-AMD64}"
+
+# the version is the date
+OS_VERSION=$(date +%Y%m%d)
+
+# defines the born on date of a build
+BUILD_DATE=$(date)
 
 # include helper functions
 . config/functions
@@ -56,7 +65,7 @@ KERNEL_NAME="${KERNEL_NAME:-KERNEL}"
 
 LINUX_DEPENDS="${PROJECT_DIR}/${PROJECT}/linux ${PROJECT_DIR}/${PROJECT}/patches/linux ${PROJECT_DIR}/${PROJECT}/packages/linux ${ROOT}/packages/linux"
 [ -n "${DEVICE}" ] && LINUX_DEPENDS+=" ${PROJECT_DIR}/${PROJECT}/devices/${DEVICE}/linux ${PROJECT_DIR}/${PROJECT}/devices/${DEVICE}/patches/linux ${PROJECT_DIR}/${PROJECT}/devices/${DEVICE}/packages/linux"
-[ "${TARGET_ARCH}" = "x86_64" ] && LINUX_DEPENDS+=" ${ROOT}/packages/linux-firmware/intel-ucode ${ROOT}/packages/linux-firmware/kernel-firmware"
+[[ "${TARGET_ARCH}" =~ i*86|x86_64 ]] && LINUX_DEPENDS+=" ${ROOT}/packages/linux-firmware/intel-ucode ${ROOT}/packages/linux-firmware/kernel-firmware"
 
 # Need to point to your actual cc
 # If you have ccache installed, take care that LOCAL_CC does not point to it
@@ -86,7 +95,16 @@ VERBOSE="${VERBOSE:-yes}"
 # directory.
 CCACHE_CACHE_SIZE="20G"
 
-# read local persistent options from $ROOT if available
+# compression level for ccache
+# This option determines the level at which ccache will compress object files
+# using the real-time compression algorithm Zstandard. It only has effect if
+# compression is enabled (which it is by default). Zstandard is extremely fast
+# for decompression and very fast for compression for lower compression
+# levels. The default is 0. The value 0 means that ccache will choose a
+# suitable zstd level, currently 1.
+CCACHE_COMPRESSLEVEL="0"
+
+# read local persistent options from ${ROOT} if available
 if [ -f "${ROOT}/.jelos/options" ]; then
   . "${ROOT}/.jelos/options"
 fi
@@ -99,6 +117,18 @@ fi
 # read global persistent options from ${DOCKER_WORK_DIR} if available
 if [ -f "${DOCKER_WORK_DIR}/.jelos/options" ]; then
   . "${DOCKER_WORK_DIR}/.jelos/options"
+fi
+
+if [ "${LOCAL_CCACHE_SUPPORT}" = "yes" ] && [ -z "${CCACHE_DISABLE}" ]; then
+  # like LOCAL_CC check for local ccache only on the very first
+  # call to config/options, before toolchain has been added to the path,
+  # otherwise we might pick up ccache from toolchain/bin here
+  if [ -z "${LOCAL_CCACHE}" ] && [ "${LOCAL_CCACHE_CHECKED}" != "yes" ]; then
+    export LOCAL_CCACHE="$(command -v ccache)"
+    export LOCAL_CCACHE_CHECKED="yes"
+  fi
+else
+  export LOCAL_CCACHE=""
 fi
 
 # overwrite OEM_SUPPORT via commandline

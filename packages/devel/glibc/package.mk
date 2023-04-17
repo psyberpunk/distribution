@@ -3,8 +3,7 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="glibc"
-PKG_VERSION="2.36"
-PKG_SHA256="1c959fea240906226062cb4b1e7ebce71a9f0e3c0836c09e7e3423d434fcfe75"
+PKG_VERSION="2.37"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.gnu.org/software/libc/"
 PKG_URL="https://ftp.gnu.org/pub/gnu/glibc/${PKG_NAME}-${PKG_VERSION}.tar.xz"
@@ -14,11 +13,14 @@ PKG_LONGDESC="The Glibc package contains the main C library."
 PKG_BUILD_FLAGS="+bfd -gold"
 
 case "${DEVICE}" in
+  RK3566)
+    OPT_ENABLE_KERNEL=4.4.0
+  ;;
   RK3588)
     OPT_ENABLE_KERNEL=5.10.0
-    ;;
+  ;;
   *)
-    OPT_ENABLE_KERNEL=5.15.0
+    OPT_ENABLE_KERNEL=6.1.0
   ;;
 esac
 
@@ -56,8 +58,8 @@ post_unpack() {
 pre_configure_target() {
 # Filter out some problematic *FLAGS
   export CFLAGS=$(echo ${CFLAGS} | sed -e "s|-ffast-math||g")
-  export CFLAGS=$(echo ${CFLAGS} | sed -e "s|-Ofast|-O2|g")
-  export CFLAGS=$(echo ${CFLAGS} | sed -e "s|-O.|-O2|g")
+  export CFLAGS=$(echo ${CFLAGS} | sed -e "s|-Ofast|-O3|g")
+  export CFLAGS=$(echo ${CFLAGS} | sed -e "s|-O.|-O3|g")
 
   export CFLAGS=$(echo ${CFLAGS} | sed -e "s|-Wunused-but-set-variable||g")
   export CFLAGS="${CFLAGS} -Wno-unused-variable"
@@ -67,8 +69,8 @@ pre_configure_target() {
   fi
 
   export LDFLAGS=$(echo ${LDFLAGS} | sed -e "s|-ffast-math||g")
-  export LDFLAGS=$(echo ${LDFLAGS} | sed -e "s|-Ofast|-O2|g")
-  export LDFLAGS=$(echo ${LDFLAGS} | sed -e "s|-O.|-O2|g")
+  export LDFLAGS=$(echo ${LDFLAGS} | sed -e "s|-Ofast|-O3|g")
+  export LDFLAGS=$(echo ${LDFLAGS} | sed -e "s|-O.|-O3|g")
 
   export LDFLAGS=$(echo ${LDFLAGS} | sed -e "s|-Wl,--as-needed||")
 
